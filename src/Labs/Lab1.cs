@@ -6,7 +6,9 @@ internal static class Lab1
 {
     public static Task Run()
     {
-        ImmutableArray<Item> data = [new(5, 4), new(7, 5), new(4, 3), new(9, 7), new(8, 6)];
+        MixedItem[] data = [
+            new(5, 4, false), new(7, 5, true), new(4, 3, true), new(9, 7, false), new(8, 6, false)
+        ];
         var weights = data.Select(x => x.Weight).ToArray();
         var prices = data.Select(x => (double)x.Price).ToArray();
 
@@ -16,8 +18,12 @@ internal static class Lab1
 
         var maxPrice = UnboundedKnapsackSolve(weights, prices, 16, data.Length);
         Console.WriteLine($"Unbounded Knapsack: ${maxPrice}");
+
         var fractionalPrice = FractionalKnapsackSolve(data, 16);
         Console.WriteLine($"Fractional Knapsack: ${fractionalPrice}");
+
+        var mixedPrice = MixedKnapsackSolve(data, 16);
+        Console.WriteLine($"Mixed Knapsack: ${mixedPrice}");
 
         return Task.CompletedTask;
     }
@@ -40,10 +46,10 @@ internal static class Lab1
     }
 
     private static double FractionalKnapsackSolve(
-        ImmutableArray<Item> items, int maxWeight
+        IEnumerable<IItem> items, int maxWeight
     )
     {
-        List<(double Price, int Weight)> fractionalItems = new(items.Length);
+        List<(double Price, int Weight)> fractionalItems = new(items.Count());
 
         foreach (var item in items)
         {
@@ -60,6 +66,36 @@ internal static class Lab1
         var weights = fractionalItems.Select(x => x.Weight).ToArray();
         var prices = fractionalItems.Select(x => x.Price).ToArray();
         return Knapsack(weights, prices, maxWeight, fractionalItems.Count);
+    }
+
+    private static double MixedKnapsackSolve(
+        IEnumerable<MixedItem> items, int maxWeight
+    )
+    {
+        List<(double Price, int Weight)> newItems = new(items.Count());
+
+        foreach (var item in items)
+        {
+            if (item.IsFractional)
+            {
+                var piecesCount = item.Weight;
+                var price = 1.0 * item.Price / item.Weight;
+                var weight = 1;
+
+                for (var i = 0; i < piecesCount; i += 1)
+                {
+                    newItems.Add(new(price, weight));
+                }
+            }
+            else
+            {
+                newItems.Add(new(item.Price, item.Weight));
+            }
+        }
+
+        var weights = newItems.Select(x => x.Weight).ToArray();
+        var prices = newItems.Select(x => x.Price).ToArray();
+        return Knapsack(weights, prices, maxWeight, newItems.Count);
     }
 
     private static double Knapsack(int[] weights, double[] values, int capacity, int itemCount)
@@ -90,10 +126,17 @@ internal static class Lab1
         return maxPricesForWeight[itemCount, capacity];
     }
 
-    private class Item(int price, int weight)
+    private class MixedItem(int price, int weight, bool isFractional) : IItem
     {
         public int Price { get; set; } = price;
         public int Weight { get; set; } = weight;
+        public bool IsFractional { get; set; } = isFractional;
+    }
+
+    private interface IItem
+    {
+        public int Price { get; set; }
+        public int Weight { get; set; }
     }
 
     private class GenericItem(double price, double weight)
