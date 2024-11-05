@@ -1,3 +1,5 @@
 ﻿using Labs;
 
-await Lab1.Run();
+//Lab3.Run();
+
+Lab2.Run();

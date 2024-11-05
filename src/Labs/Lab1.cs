@@ -1,6 +1,4 @@
-﻿using System.Collections.Immutable;
-
-namespace Labs;
+﻿namespace Labs;
 
 internal static class Lab1
 {
@@ -13,6 +11,7 @@ internal static class Lab1
         var prices = data.Select(x => (double)x.Price).ToArray();
 
         Console.WriteLine("Lab 1");
+
         var price = Knapsack(weights, prices, 16, data.Length);
         Console.WriteLine($"Knapsack: ${price}");
 
